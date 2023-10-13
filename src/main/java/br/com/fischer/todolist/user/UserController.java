@@ -11,20 +11,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @PostMapping()
     public ResponseEntity create(@RequestBody User user) {
-        User userWithUsername = this.userRepository.findByUsername(user.getUsername());
-        if (userWithUsername != null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists");
-        }
-
-        String passwordHashed = BCrypt.withDefaults().hashToString(12, user.getPassword().toCharArray());
-        user.setPassword(passwordHashed);
-
-        User savedUser = this.userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        return userService.createUser(user);
     }
 
 }

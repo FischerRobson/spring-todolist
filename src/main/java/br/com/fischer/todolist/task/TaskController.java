@@ -18,43 +18,23 @@ import java.util.UUID;
 public class TaskController {
 
     @Autowired
-    TaskRepository taskRepository;
+    TaskService taskService;
 
     @PostMapping()
     public ResponseEntity create(@RequestBody Task task, HttpServletRequest request) {
         User user = (User) request.getAttribute("user");
-        task.setUser(user);
-
-        if (task.getStartAt().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Start at date is before present date");
-        }
-
-        if (task.getEndAt().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("End at date is before present date");
-        }
-
-        if (task.getEndAt().isBefore(task.getStartAt())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("End at date is before start at date");
-        }
-
-        Task savedTask = taskRepository.save(task);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedTask);
+        return this.taskService.createTask(task, user);
     }
 
     @GetMapping
     public ResponseEntity list(HttpServletRequest request) {
         User user = (User) request.getAttribute("user");
-        List<Task> tasks = this.taskRepository.findByUserId(user.getId());
-        return ResponseEntity.status(HttpStatus.OK).body(tasks);
+        return this.taskService.listTasksByUser(user.getId());
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity update(@RequestBody Task task, HttpServletRequest request, @PathVariable UUID id) {
-        Optional<Task> previousTask = this.taskRepository.findById(id);
-
-        Utils.copyNonNullProperties(task, previousTask);
-
-        Task savedTask = this.taskRepository.save(task);
-        return ResponseEntity.status(HttpStatus.OK).body(savedTask);
+        User user = (User) request.getAttribute("user");
+        return this.taskService.updateTask(task, id, user);
     }
 }
