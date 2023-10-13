@@ -17,6 +17,7 @@ public class Task {
 
     @JoinColumn(name = "userId")
     @ManyToOne
+
     private User user;
 
     @Column(length = 50)

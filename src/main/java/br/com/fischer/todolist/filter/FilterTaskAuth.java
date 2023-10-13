@@ -23,30 +23,42 @@ public class FilterTaskAuth extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authorization = request.getHeader("Authorization");
-        String base64Auth = authorization.substring("Basic".length()).trim(); // beginIndex = start of susbtring
-                                                                   // -> Basic.length() = 5, substring start in index 5
+        String requestPath = request.getServletPath();
+        if (requestPath.equals("/tasks")) {
 
-        byte[] decodedAuth = Base64.getDecoder().decode(base64Auth);
+            String authorization = request.getHeader("Authorization");
 
-        String auth = new String(decodedAuth);
-        String[] credentials = auth.split(":");
+            // beginIndex = start of substring
+            // -> Basic.length() = 5, substring start in index 5
+            String base64Auth = authorization.substring("Basic".length()).trim();
 
-        String username = credentials[0];
-        String password = credentials[1];
 
-        User user = this.userRepository.findByUsername(username);
+            byte[] decodedAuth = Base64.getDecoder().decode(base64Auth);
 
-        if (user == null) {
-           response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            String auth = new String(decodedAuth);
+            String[] credentials = auth.split(":");
+
+            String username = credentials[0];
+            String password = credentials[1];
+
+            User user = this.userRepository.findByUsername(username);
+
+            if (user == null) {
+                response.sendError(HttpStatus.UNAUTHORIZED.value());
+            } else {
+                BCrypt.Result passwordMatches = BCrypt.verifyer().verify(password.getBytes(), user.getPassword().getBytes());
+
+                if (passwordMatches.verified) {
+                    request.setAttribute("user", user);
+                    filterChain.doFilter(request, response);
+                } else {
+                    response.sendError(HttpStatus.UNAUTHORIZED.value());
+                }
+            }
+
         }
-
-        BCrypt.Result passwordMatches = BCrypt.verifyer().verify(password.getBytes(), user.getPassword().getBytes());
-
-        if (passwordMatches.verified) {
-            filterChain.doFilter(request, response);
-        } else {
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+         else {
+             filterChain.doFilter(request, response);
         }
     }
 }
