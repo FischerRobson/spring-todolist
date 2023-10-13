@@ -1,6 +1,7 @@
 package br.com.fischer.todolist.task;
 
 import br.com.fischer.todolist.user.User;
+import br.com.fischer.todolist.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -44,5 +46,15 @@ public class TaskController {
         User user = (User) request.getAttribute("user");
         List<Task> tasks = this.taskRepository.findByUserId(user.getId());
         return ResponseEntity.status(HttpStatus.OK).body(tasks);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity update(@RequestBody Task task, HttpServletRequest request, @PathVariable UUID id) {
+        Optional<Task> previousTask = this.taskRepository.findById(id);
+
+        Utils.copyNonNullProperties(task, previousTask);
+
+        Task savedTask = this.taskRepository.save(task);
+        return ResponseEntity.status(HttpStatus.OK).body(savedTask);
     }
 }
