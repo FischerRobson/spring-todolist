@@ -11,13 +11,13 @@ import java.util.UUID;
 @Data
 @Entity(name = "tasks")
 public class Task {
+
     @Id
     @GeneratedValue(generator = "UUID")
     private UUID id;
 
     @JoinColumn(name = "userId")
     @ManyToOne
-
     private User user;
 
     @Column(length = 50)
@@ -34,5 +34,12 @@ public class Task {
 
     @Enumerated(EnumType.STRING)
     private TaskPriority priority;
+
+    public void setTitle(String title) throws Exception {
+        if (title.length() > 50) {
+            throw new Exception("Title must contain less than 50 characters");
+        }
+        this.title = title;
+    }
 
 }

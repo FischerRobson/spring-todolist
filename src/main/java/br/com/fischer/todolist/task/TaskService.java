@@ -45,7 +45,6 @@ public class TaskService {
     public ResponseEntity updateTask(Task task, UUID taskId, User user) {
         Optional<Task> previousTask = this.taskRepository.findById(taskId);
 
-
         if (previousTask.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Task not found");
         }
